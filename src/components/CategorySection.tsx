@@ -1,11 +1,11 @@
 
 import { Link } from "react-router-dom";
-import { Grain, Leaf, Apple, Cpu, Tractor, FlaskConical, Milk, PiggyBank } from "lucide-react";
+import { Wheat, Leaf, Apple, Cpu, Tractor, FlaskConical, Milk, PiggyBank } from "lucide-react";
 
 const categories = [
   {
     name: "Grains",
-    icon: Grain,
+    icon: Wheat,
     description: "Rice, wheat, maize, barley, and other cereals",
     path: "/products/grains",
     color: "bg-amber-100",
