@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     # Third party apps
     'rest_framework',
     'corsheaders',
+    'rest_framework_simplejwt',
     # Local apps
     'users',
     'products',  # New app for products
@@ -120,6 +121,15 @@ AUTH_USER_MODEL = 'users.User'
 
 # CORS settings
 CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:8080",
+    "http://127.0.0.1:8080",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
 
 # Internationalization
 LANGUAGE_CODE = 'en-us'
@@ -138,3 +148,4 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
