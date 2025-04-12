@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     'corsheaders',
     # Local apps
     'users',
+    'products',  # New app for products
 ]
 
 MIDDLEWARE = [
@@ -67,8 +68,12 @@ WSGI_APPLICATION = 'agrotrade.wsgi.application'
 # Database
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'postgres',
+        'USER': 'postgres',
+        'PASSWORD': 'vikash123@@$$',
+        'HOST': 'db.rsnulxqtwyodvcjqbgir.supabase.co',
+        'PORT': '5432',
     }
 }
 
