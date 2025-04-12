@@ -66,16 +66,25 @@ TEMPLATES = [
 WSGI_APPLICATION = 'agrotrade.wsgi.application'
 
 # Database
+# Use SQLite for local development
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',
-        'USER': 'postgres',
-        'PASSWORD': 'vikash123@@$$',
-        'HOST': 'db.rsnulxqtwyodvcjqbgir.supabase.co',
-        'PORT': '5432',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+# Uncomment this section for production with PostgreSQL
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'postgres',
+#         'USER': 'postgres',
+#         'PASSWORD': 'vikash123@@$$',
+#         'HOST': 'db.rsnulxqtwyodvcjqbgir.supabase.co',
+#         'PORT': '5432',
+#     }
+# }
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
