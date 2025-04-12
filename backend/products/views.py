@@ -10,6 +10,7 @@ from .serializers import (
     OrderSerializer
 )
 from django.db.models import Q
+from django.shortcuts import get_object_or_404
 
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Category.objects.filter(is_active=True)
@@ -18,7 +19,6 @@ class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
 
 class ProductViewSet(viewsets.ModelViewSet):
     serializer_class = ProductSerializer
-    lookup_field = 'slug'
     
     def get_queryset(self):
         queryset = Product.objects.filter(is_active=True).prefetch_related('images', 'category')
@@ -61,6 +61,27 @@ class ProductViewSet(viewsets.ModelViewSet):
     
     def perform_create(self, serializer):
         serializer.save(seller=self.request.user)
+
+    def get_object(self):
+        # Allow lookup by ID or slug
+        queryset = self.filter_queryset(self.get_queryset())
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+        filter_kwargs = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
+        
+        # Try to get by slug first
+        try:
+            obj = get_object_or_404(queryset, **filter_kwargs)
+            self.check_object_permissions(self.request, obj)
+            return obj
+        except:
+            # If that fails, try to get by ID
+            try:
+                product_id = int(self.kwargs[lookup_url_kwarg])
+                obj = get_object_or_404(queryset, id=product_id)
+                self.check_object_permissions(self.request, obj)
+                return obj
+            except (ValueError, KeyError):
+                raise Http404
     
     @action(detail=False, methods=['get'], url_path='my-products')
     def my_products(self, request):
