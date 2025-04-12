@@ -21,20 +21,100 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { CheckCircle2 } from "lucide-react";
+import { authService } from "../services/api";
 
 const Register = () => {
   const [userType, setUserType] = useState("buyer");
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    password: "",
+    confirmPassword: "",
+    companyName: "",
+    country: "",
+    businessType: "",
+  });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setFormData({
+      ...formData,
+      [id]: value,
+    });
+  };
+
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (formData.password !== formData.confirmPassword) {
+      toast({
+        title: "Password mismatch",
+        description: "The passwords you entered don't match",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsLoading(true);
+    
     toast({
       title: "Registration in progress",
       description: "Your account is being created. Please wait...",
     });
-    // In a real app, you'd handle registration logic here
+
+    try {
+      const userData = {
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        email: formData.email,
+        phone: formData.phone,
+        password: formData.password,
+        password2: formData.confirmPassword,
+        company_name: formData.companyName,
+        country: formData.country,
+        user_type: userType,
+        business_type: formData.businessType,
+      };
+
+      await authService.register(userData);
+      
+      toast({
+        title: "Registration successful!",
+        description: "Welcome to AgroTrade",
+      });
+      
+      // Navigate to homepage after successful registration
+      navigate("/");
+    } catch (error: any) {
+      console.error("Registration error:", error);
+      
+      const errorMessage = error.response?.data?.email?.[0] || 
+                          error.response?.data?.password?.[0] ||
+                          "Registration failed. Please check your information and try again.";
+      
+      toast({
+        title: "Registration failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -65,48 +145,96 @@ const Register = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <form onSubmit={handleSubmit}>
+                  <form id="register-form" onSubmit={handleSubmit}>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                       <div className="space-y-2">
                         <Label htmlFor="firstName">First Name</Label>
-                        <Input id="firstName" placeholder="Enter your first name" required />
+                        <Input 
+                          id="firstName" 
+                          placeholder="Enter your first name" 
+                          required 
+                          value={formData.firstName}
+                          onChange={handleChange}
+                        />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="lastName">Last Name</Label>
-                        <Input id="lastName" placeholder="Enter your last name" required />
+                        <Input 
+                          id="lastName" 
+                          placeholder="Enter your last name" 
+                          required 
+                          value={formData.lastName}
+                          onChange={handleChange}
+                        />
                       </div>
                     </div>
 
                     <div className="space-y-2 mb-4">
                       <Label htmlFor="email">Email Address</Label>
-                      <Input id="email" type="email" placeholder="Enter your email" required />
+                      <Input 
+                        id="email" 
+                        type="email" 
+                        placeholder="Enter your email" 
+                        required 
+                        value={formData.email}
+                        onChange={handleChange}
+                      />
                     </div>
 
                     <div className="space-y-2 mb-4">
                       <Label htmlFor="phone">Phone Number</Label>
-                      <Input id="phone" placeholder="Enter your phone number" required />
+                      <Input 
+                        id="phone" 
+                        placeholder="Enter your phone number" 
+                        required 
+                        value={formData.phone}
+                        onChange={handleChange}
+                      />
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                       <div className="space-y-2">
                         <Label htmlFor="password">Password</Label>
-                        <Input id="password" type="password" placeholder="Create password" required />
+                        <Input 
+                          id="password" 
+                          type="password" 
+                          placeholder="Create password" 
+                          required 
+                          value={formData.password}
+                          onChange={handleChange}
+                        />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="confirmPassword">Confirm Password</Label>
-                        <Input id="confirmPassword" type="password" placeholder="Confirm password" required />
+                        <Input 
+                          id="confirmPassword" 
+                          type="password" 
+                          placeholder="Confirm password" 
+                          required 
+                          value={formData.confirmPassword}
+                          onChange={handleChange}
+                        />
                       </div>
                     </div>
 
                     <div className="space-y-2 mb-4">
                       <Label htmlFor="companyName">Company Name</Label>
-                      <Input id="companyName" placeholder="Enter your company name" required />
+                      <Input 
+                        id="companyName" 
+                        placeholder="Enter your company name" 
+                        required 
+                        value={formData.companyName}
+                        onChange={handleChange}
+                      />
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                       <div className="space-y-2">
                         <Label htmlFor="country">Country</Label>
-                        <Select>
+                        <Select 
+                          onValueChange={(value) => handleSelectChange("country", value)}
+                          value={formData.country}
+                        >
                           <SelectTrigger>
                             <SelectValue placeholder="Select country" />
                           </SelectTrigger>
@@ -121,7 +249,10 @@ const Register = () => {
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="businessType">{userType === "buyer" ? "Business Type" : "Producer Type"}</Label>
-                        <Select>
+                        <Select
+                          onValueChange={(value) => handleSelectChange("businessType", value)}
+                          value={formData.businessType}
+                        >
                           <SelectTrigger>
                             <SelectValue placeholder="Select type" />
                           </SelectTrigger>
@@ -146,8 +277,12 @@ const Register = () => {
                       </div>
                     </div>
 
-                    <Button type="submit" className="w-full bg-agro-green-600 hover:bg-agro-green-700">
-                      Create Account
+                    <Button 
+                      type="submit" 
+                      className="w-full bg-agro-green-600 hover:bg-agro-green-700"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? "Creating Account..." : "Create Account"}
                     </Button>
                   </form>
                 </CardContent>

@@ -13,18 +13,65 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/components/ui/use-toast";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { authService } from "../services/api";
 
 const Login = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+    remember: false,
+  });
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setFormData({
+      ...formData,
+      [id]: value,
+    });
+  };
+
+  const handleCheckboxChange = (checked: boolean) => {
+    setFormData({
+      ...formData,
+      remember: checked,
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
+
     toast({
       title: "Login in progress",
       description: "Checking your credentials...",
     });
-    // In a real app, you'd handle login logic here
+
+    try {
+      await authService.login(formData.email, formData.password);
+      
+      toast({
+        title: "Login successful!",
+        description: "Welcome back to AgroTrade",
+        variant: "default",
+      });
+      
+      // If remember me is checked, we already saved the token in localStorage
+      // Navigate to homepage after successful login
+      navigate("/");
+    } catch (error: any) {
+      toast({
+        title: "Login failed",
+        description: error.response?.data?.error || "Please check your credentials and try again",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -42,7 +89,14 @@ const Login = () => {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" placeholder="Enter your email" required />
+                  <Input 
+                    id="email" 
+                    type="email" 
+                    placeholder="Enter your email" 
+                    required 
+                    value={formData.email}
+                    onChange={handleChange}
+                  />
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
@@ -51,10 +105,21 @@ const Login = () => {
                       Forgot Password?
                     </Link>
                   </div>
-                  <Input id="password" type="password" placeholder="Enter your password" required />
+                  <Input 
+                    id="password" 
+                    type="password" 
+                    placeholder="Enter your password" 
+                    required 
+                    value={formData.password}
+                    onChange={handleChange}
+                  />
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Checkbox id="remember" />
+                  <Checkbox 
+                    id="remember" 
+                    checked={formData.remember}
+                    onCheckedChange={handleCheckboxChange}
+                  />
                   <label
                     htmlFor="remember"
                     className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
@@ -62,8 +127,12 @@ const Login = () => {
                     Remember me
                   </label>
                 </div>
-                <Button type="submit" className="w-full bg-agro-green-600 hover:bg-agro-green-700">
-                  Log In
+                <Button 
+                  type="submit" 
+                  className="w-full bg-agro-green-600 hover:bg-agro-green-700"
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Logging in..." : "Log In"}
                 </Button>
               </form>
             </CardContent>
