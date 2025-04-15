@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import ProductForm from "@/components/ProductForm";
 import api from "@/services/api";
 import { Loader2, Filter, Search, Tag, Plus, Minus, ShoppingCart } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface Product {
   id: number;
@@ -159,9 +160,11 @@ const Products = () => {
             {products.map((product: Product) => (
               <Card key={product.id} className="overflow-hidden h-full flex flex-col">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-lg leading-tight line-clamp-2">
-                    {product.title}
-                  </CardTitle>
+                  <Link to={`/products/${product.id}`}>
+                    <CardTitle className="text-lg leading-tight line-clamp-2 hover:text-primary transition-colors">
+                      {product.title}
+                    </CardTitle>
+                  </Link>
                   <div className="flex items-center mt-1">
                     <Tag size={14} className="mr-1 text-gray-500" />
                     <span className="text-sm text-gray-500">{product.category_name}</span>
