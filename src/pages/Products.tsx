@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Layout from "../components/Layout";
@@ -6,9 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCart } from "@/contexts/CartContext";
+import { useToast } from "@/hooks/use-toast";
 import ProductForm from "@/components/ProductForm";
 import api from "@/services/api";
-import { Loader2, Filter, Search, Tag } from "lucide-react";
+import { Loader2, Filter, Search, Tag, Plus, Minus, ShoppingCart } from "lucide-react";
 
 interface Product {
   id: number;
@@ -25,12 +26,14 @@ interface Product {
 
 const Products = () => {
   const { isAuthenticated, user } = useAuth();
+  const { addToCart } = useCart();
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [isAddProductModalOpen, setIsAddProductModalOpen] = useState(false);
   const [editProductId, setEditProductId] = useState<number | null>(null);
+  const [quantities, setQuantities] = useState<{ [key: number]: number }>({});
 
-  // Fetch products with search and filter parameters
   const { data: products = [], isLoading, refetch } = useQuery({
     queryKey: ['products', searchTerm, categoryFilter],
     queryFn: async () => {
@@ -49,7 +52,6 @@ const Products = () => {
     },
   });
 
-  // Fetch categories for filtering
   const { data: categories = [] } = useQuery({
     queryKey: ['categories'],
     queryFn: async () => {
@@ -57,6 +59,25 @@ const Products = () => {
       return response.data;
     }
   });
+
+  const handleQuantityChange = (productId: number, change: number) => {
+    setQuantities(prev => ({
+      ...prev,
+      [productId]: Math.max(0, (prev[productId] || 0) + change)
+    }));
+  };
+
+  const handleAddToCart = (product: Product) => {
+    const quantity = quantities[product.id] || 0;
+    if (quantity > 0) {
+      addToCart(product, quantity);
+      setQuantities(prev => ({ ...prev, [product.id]: 0 }));
+      toast({
+        title: "Added to cart",
+        description: `${quantity} ${product.unit}(s) of ${product.title} added to your cart.`
+      });
+    }
+  };
 
   const handleAddProduct = () => {
     setEditProductId(null);
@@ -158,7 +179,7 @@ const Products = () => {
                     Seller: {product.seller_name}
                   </div>
                 </CardContent>
-                <CardFooter className="pt-0 flex justify-between border-t p-4">
+                <CardFooter className="pt-0 flex flex-col gap-3 border-t p-4">
                   {isAuthenticated && user?.id === product.id && user?.user_type === 'seller' ? (
                     <Button 
                       variant="outline" 
@@ -169,7 +190,36 @@ const Products = () => {
                       Edit Product
                     </Button>
                   ) : (
-                    <Button size="sm" className="w-full">View Details</Button>
+                    <>
+                      <div className="flex items-center justify-between w-full">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => handleQuantityChange(product.id, -1)}
+                          disabled={!quantities[product.id]}
+                        >
+                          <Minus className="h-4 w-4" />
+                        </Button>
+                        <span className="mx-2 min-w-[3rem] text-center">
+                          {quantities[product.id] || 0}
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => handleQuantityChange(product.id, 1)}
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <Button
+                        className="w-full"
+                        onClick={() => handleAddToCart(product)}
+                        disabled={!quantities[product.id]}
+                      >
+                        <ShoppingCart className="mr-2 h-4 w-4" />
+                        Add to Cart
+                      </Button>
+                    </>
                   )}
                 </CardFooter>
               </Card>
